@@ -1,15 +1,16 @@
 import fs from 'fs';
 import * as acorn from 'acorn';
-
 import chalk from 'chalk';
 import escodegen from 'escodegen';
 import ASTHelper from './astHelper.js';
 
 class ESLintClone {
-    constructor(filePath, fix) {
+    #errors = [];
+    #variables = new Map();
+
+    constructor(filePath) {
         this.filePath = filePath;
-        this.fix = fix;
-        this.errors = [];
+        this.outputFile = filePath.replace('.js', '').concat('.linted.js');
     }
 
     reportError(message, { line, column }) {
@@ -17,24 +18,22 @@ class ESLintClone {
         const errorMessage = `${chalk.red('Error:')} ${message}`;
 
         console.error(`${errorMessage}\n${chalk.gray(errorLocation)}\n`);
-        this.errors.push(errorMessage);
+        this.#errors.push(errorMessage);
     }
 
     handleLiteral(node) {
-        if (!(node.raw && typeof node.value === 'string'))
+        if (!(node.raw && typeof node.value === 'string')) {
             return;
+        }
 
-        const postion = node.loc.start;
-        if (!node.raw.includes('"')) return
-        const message = `Found double quotes "${node.value}"`;
-        this.reportError(message, postion);
+        const position = node.loc.start;
+        if (!node.raw.includes('"')) {
+            return;
+        }
+        const message = `use single quotes instead of double quotes`;
+        this.reportError(message, position);
     }
 
-
-    handleArrowFunctionExpression(node) {
-
-    }
-    #variables = new Map()
     handleExpressionDeclaration(node) {
         const { expression } = node;
         if (!expression.left) return;
@@ -45,20 +44,26 @@ class ESLintClone {
 
         const varName = (expression.left.object || expression.left).name;
 
-        const { kind, stage, nodeDeclaration } = this.#variables.get(varName);
+        const { kind, stage, nodeDeclaration, originalKind } = this.#variables.get(varName);
+
         const isDeclaration = stage === 'declaration'
+
         if (expression.left.type === 'MemberExpression' && isDeclaration) {
+            const message = `use "const" instead of "${originalKind}"`;
+            this.reportError(message, node.loc.start);
+
             nodeDeclaration.kind = 'const';
             this.#variables.set(varName, {
                 kind: 'expressionDeclaration',
             });
-            // console.log(`${varName} had a memberExpression and is const`)
             return
         }
 
         if (isDeclaration) {
+            const message = `use "let" instead of "${originalKind}"`;
+            this.reportError(message, node.loc.start);
+
             nodeDeclaration.kind = 'let';
-            // console.log(`${varName} had a mutation and is let`)
             this.#variables.set(varName, {
                 kind: 'expressionDeclaration',
             });
@@ -66,15 +71,18 @@ class ESLintClone {
         }
 
         if (!isDeclaration && kind === 'let') {
-            // console.log(`${varName} had a mutation and kept as let`)
             return;
         }
 
     }
+
     handleVariableDeclaration(node) {
         for (const declaration of node.declarations) {
+            const originalKind = node.kind;
+
             node.kind = 'const';
             this.#variables.set(declaration.id.name, {
+                originalKind,
                 kind: node.kind,
                 stage: 'declaration',
                 nodeDeclaration: node
@@ -82,51 +90,49 @@ class ESLintClone {
         }
     }
 
-
-    #traverse(node) {
+    traverse(node) {
         const astHelper = new ASTHelper();
         astHelper
             .setLiteralHook(node => {
                 this.handleLiteral(node);
             })
             .setVariableDeclarationHook(node => {
-                this.handleVariableDeclaration(node)
+                this.handleVariableDeclaration(node);
             })
             .setExpressionStatementHook(node => {
-                this.handleExpressionDeclaration(node)
+                this.handleExpressionDeclaration(node);
             })
-
             .traverse(node);
     }
-
 
     lint() {
         const code = fs.readFileSync(this.filePath, 'utf-8');
         const ast = acorn.parse(code, { ecmaVersion: 2022, locations: true });
 
-        this.#traverse(ast);
+        this.traverse(ast);
 
         const updatedCode = escodegen.generate(ast);
-        console.log(chalk.green('Code with replacements:\n'));
+        fs.writeFileSync(this.outputFile, updatedCode, 'utf-8');
+        console.log(chalk.green('Code fixed and saved successfully.'));
+        console.log(chalk.green('Code without modifications:\n'));
         console.log(updatedCode);
         console.log('\n');
 
-        if (this.errors.length === 0) {
+        if (this.#errors.length === 0) {
             console.log(chalk.green('Linting completed without errors.'));
         } else {
-            console.log(chalk.red(`Linting completed with ${this.errors.length} error(s).`));
+            console.log(chalk.red(`Linting completed with ${this.#errors.length} error(s).`));
         }
     }
 }
 
 const args = process.argv.slice(2);
 const filePath = args[args.length - 1];
-const fix = args.includes('-f') || args.includes('--fix');
 
 if (!filePath) {
     console.error(chalk.red('Error: Please provide a file path as an argument.'));
     process.exit(1);
 }
 
-const eslintClone = new ESLintClone(filePath, fix);
+const eslintClone = new ESLintClone(filePath);
 eslintClone.lint();
