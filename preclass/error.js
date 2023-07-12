@@ -1,9 +1,9 @@
 let text = "abc12" + "cbd300";
 var neverReassigned = {};
-neverReassigned.name = 'erick'
+neverReassigned.name = "erick wendel"
 
 var reassignes = {}
-reassignes = { name: 'ana' }
+reassignes = { name: "ana" }
 reassignes.name = 1
 
 reassignes = 0

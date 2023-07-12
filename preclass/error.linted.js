@@ -1,6 +1,6 @@
 const text = 'abc12' + 'cbd300';
 const neverReassigned = {};
-neverReassigned.name = 'erick';
+neverReassigned.name = 'erick wendel';
 let reassignes = {};
 reassignes = { name: 'ana' };
 reassignes.name = 1;
