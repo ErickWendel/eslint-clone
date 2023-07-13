@@ -7,6 +7,7 @@ reassignes = { name: "ana" }
 reassignes.name = 1
 
 reassignes = 0
+reassignes = { name: "ana" }
 // text = 'aeeee'
 // text = 'aeeee'
 // text = 'aeeee'

@@ -5,7 +5,7 @@
     "chalk": "^5.3.0"
   },
   "bin": {
-    "eslint-clone": "./index.js"
+    "eslint-clone": "./src/index.js"
   },
   "type": "module",
   "name": "eslint-clone",
