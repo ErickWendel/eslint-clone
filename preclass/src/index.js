@@ -8,7 +8,6 @@ import SyntaxTreeProcessor from './syntaxTreeProcessor.js';
 import chalk from 'chalk';
 import * as acorn from 'acorn';
 
-// Check if the file path provided is in the current directory
 function getFilePathFromCLI() {
   try {
     const { values: { file } } = parseArgs({
@@ -39,9 +38,8 @@ const ast = acorn.parse(code, {
     sourceType: 'module',
     allowHashBang: true,
 });
-const astHelper = new SyntaxTreeProcessor(filePath);
-const errors = astHelper.process(ast);
-
+const syntaxTreeProcessor = new SyntaxTreeProcessor(filePath);
+const errors = syntaxTreeProcessor.process(ast);
 Reporter.report({
     errors,
     ast,

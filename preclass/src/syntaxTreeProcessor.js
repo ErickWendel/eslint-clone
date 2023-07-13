@@ -121,12 +121,12 @@ class SyntaxTreeProcessor {
       ExpressionStatement: (node) => this.#handleExpressionDeclaration(node),
     };
     hooks[node?.type]?.(node);
-
     for (const key in node) {
       if (typeof node[key] !== 'object') continue;
       this.#traverse(node[key]);
     }
-  };
+  }
+
   process(node) {
 
     this.#traverse(node);

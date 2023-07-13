@@ -13,3 +13,134 @@ task:
     keep spaces
     don't put semicolon automatically
     report semicolon ';'
+---
+node -v
+npm init -y
+npm pkg set type=modules engines.node=$(node -v) author=erickwendel
+touch error.js
+    all
+    node error.js
+
+mkdir src
+    index.js
+
+npm i acorn@8.10.0
+index.js
+    untill ast
+    console.log(ast) > save on a file
+node src/index.js -f error.js > ast.json
+> should see ast
+copy error.js and paste on https://astexplorer.net/
+
+index.js
+    #!/usr/bin/env node
+
+npm pkg set bin.eslint-clone=./src/index.js
+chmod +x src/index.js
+npm link
+
+eslint-clone --file src/reporter.js
+> should be able to execute it as a command
+npm rm -g eslint-clone
+> command had disapeered
+npm link
+> back again
+
+npm i astring@1.8.6
+npm i chalk@5.3.0
+touch reporter.js
+    all but .sort
+index.js
+    all
+    errors: [
+      { message: 'Missing semicolon', errorLocation: filePath + ':1:1' },
+    ],
+> should print errors and generate linted file
+
+touch syntaxTreeProcessor
+    only signature
+index.js
+    call syntaxTreeProcessor
+syntaxTreeProcessor
+    constructor
+    #traverse
+    process
+        call #traverse
+> we're gonna replace double quotes by singleQuotes
+    show ast on file
+        Literal
+    show ast on astexplorer
+
+    #traverse
+        all
+    #handleLiteral
+        all but storeError
+    process
+        return errors
+index.js
+    send errors to reporter
+
+> final file should contain only singleQuotes
+    #storeError
+        all
+> should print lines with doubleQuotes
+
+pause > explain problem for using let, const and var
+show astexplorer
+    VariableDeclaration
+
+syntaxTreeProcessor
+    #traverse
+        VariableDeclaration
+    #handleVariableDeclaration
+        all
+    process
+        this.#traverse(node);
+        console.log([...this.#variables.entries()])
+> should see all variables being stored
+show astexplorer
+    ExpressionStatement
+        MemberExpression
+    show that the last one is console.log
+syntaxTreeProcessor
+    handleExpressionDeclaration
+        untill MemberExpression
+
+> should replace vars with const
+
+syntaxTreeProcessor
+    handleExpressionDeclaration
+        all keeping variable as it is
+
+> should not replace let if they're actually right
+syntaxTreeProcessor
+    handleExpressionDeclaration
+        remaining code
+
+> let and const should work but variable let or var won't be touched
+
+syntaxTreeProcessor
+    checkDeclarationsThatNeverChanged
+        all
+> everything should work but the order is incorrect
+reporter
+    report
+        add sort
+> errors output should ordered
+
+error.js
+    > make tests
+
+1 change text to let = should be transformed to const
+2 reassign text = should be kept to let
+3 change text to var = should be transformed to let
+4 change text to const and remove reassign = should be kept to const
+5 fix all quotes problems
+6 fix all variables problems
+7 lint syntaxTreeProcessor
+    eslint-clone --file src/syntaxTreeProcessor.js
+8 change all const variables to let on syntaxTreeProcessor
+    > should have at least 9 errors
+
+done :)
+

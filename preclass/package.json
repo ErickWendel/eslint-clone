@@ -4,9 +4,6 @@
     "astring": "^1.8.6",
     "chalk": "^5.3.0"
   },
-  "bin": {
-    "eslint-clone": "./src/index.js"
-  },
   "type": "module",
   "name": "eslint-clone",
   "version": "0.0.1",
@@ -21,5 +18,8 @@
   "description": "",
   "engines": {
     "node": "v18.16.1"
+  },
+  "bin": {
+    "eslint-clone": "./src/index.js"
   }
 }
