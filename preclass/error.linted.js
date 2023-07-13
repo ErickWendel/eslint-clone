@@ -1,11 +1,13 @@
-const text = 'abc12' + 'cbd300';
+const text = "abc12" + "cbd30220";
 const neverReassigned = {};
-neverReassigned.name = 'erick wendel';
+neverReassigned.name = "erick wendel";
 let reassignes = {};
-reassignes = { name: 'ana' };
+reassignes = {
+  name: "ana"
+};
 reassignes.name = 1;
 reassignes = 0;
-const result = text.split(',').map(letter => {
-    return letter.toUpperCase();
-}).join('.');
+const result = text.split(",").map(letter => {
+  return letter.toUpperCase();
+}).join(".");
 console.log(result);

@@ -1,41 +1,75 @@
-import fs from 'fs';
+#!/usr/bin/env node
+
+import fs from 'node:fs';
 import * as acorn from 'acorn';
 import chalk from 'chalk';
-import escodegen from 'escodegen';
+import * as astring from 'astring';
 import ASTHelper from './astHelper.js';
+import { parseArgs } from 'node:util';
 
 class ESLintClone {
     #errors = [];
+    #filePath = '';
+    #outputFile = '';
     #variables = new Map();
-
+    #messages = {
+        singleQuotes: () => 'use single quotes instead of double quotes',
+        useConst: (variableType) => `use "const" instead of ${variableType}`,
+        useLet: (variableType) => `use "let" instead of ${variableType}`,
+    }
+    #stages = {
+        declaration: 'declaration',
+        expressionDeclaration: 'expressionDeclaration',
+    }
+    #variableTypes = {
+        var: 'var',
+        let: 'let',
+        const: 'const',
+    }
     constructor(filePath) {
-        this.filePath = filePath;
-        this.outputFile = filePath.replace('.js', '').concat('.linted.js');
+        this.#filePath = filePath;
+        this.#outputFile = filePath.replace('.js', '').concat('.linted.js');
     }
 
-    reportError(message, { line, column }) {
-        const errorLocation = `${this.filePath}:${line}:${column}`;
+    #reportError(message, { line, column }) {
+        const errorLocation = `${this.#filePath}:${line}:${column + 1}`;
         const errorMessage = `${chalk.red('Error:')} ${message}`;
-
-        console.error(`${errorMessage}\n${chalk.gray(errorLocation)}\n`);
-        this.#errors.push(errorMessage);
+        const finalMessage = `${errorMessage}\n${chalk.gray(errorLocation)}\n`
+        this.#errors.push({
+            message: finalMessage,
+            errorLocation
+        });
+    }
+    #notifyErrors() {
+        this.#errors
+            // sort by line number and column
+            .sort((a, b) => {
+                const [aLine, aColumn] = a.errorLocation.split(':').slice(1);
+                const [bLine, bColumn] = b.errorLocation.split(':').slice(1);
+                if (aLine === bLine) {
+                    return aColumn - bColumn;
+                }
+                return aLine - bLine;
+            })
+            .forEach(({ message }) => console.error(message));
     }
 
-    handleLiteral(node) {
+    #handleLiteral(node) {
         if (!(node.raw && typeof node.value === 'string')) {
             return;
         }
-
         const position = node.loc.start;
-        if (!node.raw.includes('"')) {
+        if (!node.raw.includes(`"`)) {
             return;
         }
-        const message = `use single quotes instead of double quotes`;
-        this.reportError(message, position);
+
+        this.#reportError(this.#messages.singleQuotes(), position);
     }
 
-    handleExpressionDeclaration(node) {
+    #handleExpressionDeclaration(node) {
         const { expression } = node;
+
+        // console.log
         if (!expression.left) return;
 
         if (!expression.left.type === 'Identifier') {
@@ -43,79 +77,117 @@ class ESLintClone {
         }
 
         const varName = (expression.left.object || expression.left).name;
+        if (!this.#variables.has(varName)) return;
 
-        const { kind, stage, nodeDeclaration, originalKind } = this.#variables.get(varName);
+        const variable = this.#variables.get(varName);
+        const { nodeDeclaration, originalKind } = variable
 
-        const isDeclaration = stage === 'declaration'
+        // means changing an object property from a variable
+        if (expression.left.type === 'MemberExpression') {
+            this.#reportError(
+                this.#messages.useConst(nodeDeclaration.kind),
+                nodeDeclaration.loc.start
+            );
 
-        if (expression.left.type === 'MemberExpression' && isDeclaration) {
-            const message = `use "const" instead of "${originalKind}"`;
-            this.reportError(message, node.loc.start);
-
-            nodeDeclaration.kind = 'const';
+            nodeDeclaration.kind = this.#variableTypes.const;
             this.#variables.set(varName, {
-                kind: 'expressionDeclaration',
+                ...variable,
+                stage: this.#stages.expressionDeclaration,
+                nodeDeclaration,
             });
             return
         }
 
-        if (isDeclaration) {
-            const message = `use "let" instead of "${originalKind}"`;
-            this.reportError(message, node.loc.start);
-
-            nodeDeclaration.kind = 'let';
+        // means keeping the variable as it is
+        if ([nodeDeclaration.kind, originalKind].includes(this.#variableTypes.let)) {
             this.#variables.set(varName, {
-                kind: 'expressionDeclaration',
+                ...variable,
+                stage: this.#stages.expressionDeclaration,
+                nodeDeclaration,
             });
-            return
-        }
 
-        if (!isDeclaration && kind === 'let') {
             return;
         }
+        // means reassigning a variable
+        this.#reportError(
+            this.#messages.useLet(nodeDeclaration.kind),
+            nodeDeclaration.loc.start
+        );
+
+        nodeDeclaration.kind = this.#variableTypes.let;
+        this.#variables.set(varName, {
+            ...variable,
+            stage: this.#stages.expressionDeclaration,
+            nodeDeclaration,
+        });
+        return
+
 
     }
 
     handleVariableDeclaration(node) {
         for (const declaration of node.declarations) {
             const originalKind = node.kind;
-
-            node.kind = 'const';
             this.#variables.set(declaration.id.name, {
                 originalKind,
-                kind: node.kind,
-                stage: 'declaration',
+                stage: this.#stages.declaration,
                 nodeDeclaration: node
             });
         }
     }
 
-    traverse(node) {
+    checkDeclarationsThatNeverChanged() {
+        [...this.#variables.values()]
+            .filter(({ stage, nodeDeclaration }) =>
+                stage === this.#stages.declaration &&
+                nodeDeclaration.kind !== this.#variableTypes.const
+            )
+            .forEach(({ nodeDeclaration }) => {
+
+                this.#reportError(
+                    this.#messages.useConst(nodeDeclaration.kind),
+                    nodeDeclaration.loc.start
+                );
+
+                nodeDeclaration.kind = this.#variableTypes.const;
+            });
+    }
+
+    #traverse(node) {
         const astHelper = new ASTHelper();
         astHelper
             .setLiteralHook(node => {
-                this.handleLiteral(node);
+                this.#handleLiteral(node);
             })
             .setVariableDeclarationHook(node => {
                 this.handleVariableDeclaration(node);
             })
             .setExpressionStatementHook(node => {
-                this.handleExpressionDeclaration(node);
+                this.#handleExpressionDeclaration(node);
             })
             .traverse(node);
+
+        this.checkDeclarationsThatNeverChanged();
     }
 
     lint() {
-        const code = fs.readFileSync(this.filePath, 'utf-8');
-        const ast = acorn.parse(code, { ecmaVersion: 2022, locations: true });
+        const code = fs.readFileSync(this.#filePath, 'utf-8');
+        const ast = acorn.parse(code, {
+            ecmaVersion: 2022,
+            locations: true,
+            sourceType: 'module',
+            allowHashBang: true
 
-        this.traverse(ast);
+        });
 
-        const updatedCode = escodegen.generate(ast);
-        fs.writeFileSync(this.outputFile, updatedCode, 'utf-8');
+        this.#traverse(ast);
+        this.#notifyErrors();
+
+        const updatedCode = astring.generate(ast);
+        fs.writeFileSync(this.#outputFile, updatedCode, 'utf-8');
         console.log(chalk.green('Code fixed and saved successfully.'));
-        console.log(chalk.green('Code without modifications:\n'));
-        console.log(updatedCode);
+        // console.log(chalk.green('Code without modifications:\n'));
+        // console.log(updatedCode);
         console.log('\n');
 
         if (this.#errors.length === 0) {
@@ -126,8 +198,24 @@ class ESLintClone {
     }
 }
 
-const args = process.argv.slice(2);
-const filePath = args[args.length - 1];
+
+// check if the file path provided is in the current directory
+const isQuokkaEnv = !!process.env.WALLABY_ENV
+const getFileFromCLI = () => {
+    const {
+        values,
+    } = parseArgs({
+        options: {
+            file: {
+                type: 'string',
+                short: 'f',
+            },
+        }
+    });
+    return values.file;
+}
+
+const filePath = !isQuokkaEnv ? getFileFromCLI() : './error.js'
 
 if (!filePath) {
     console.error(chalk.red('Error: Please provide a file path as an argument.'));

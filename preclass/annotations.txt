@@ -1,0 +1,8 @@
+
+#!/usr/bin/env node
+npm link
+npm unlink -g eslint-clone
+
+https://astexplorer.net/
+
+npm pkg set engines.node=$(node -v) author=erickwendel
