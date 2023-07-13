@@ -176,14 +176,15 @@ class ESLintClone {
             ecmaVersion: 2022,
             locations: true,
             sourceType: 'module',
-            allowHashBang: true
-
+            allowHashBang: true,
         });
 
         this.#traverse(ast);
         this.#notifyErrors();
 
-        const updatedCode = astring.generate(ast);
+        const updatedCode = astring.generate(ast, {
+            comments: true,
+        });
         fs.writeFileSync(this.#outputFile, updatedCode, 'utf-8');
         console.log(chalk.green('Code fixed and saved successfully.'));
         // console.log(chalk.green('Code without modifications:\n'));
@@ -202,25 +203,31 @@ class ESLintClone {
 // check if the file path provided is in the current directory
 const isQuokkaEnv = !!process.env.WALLABY_ENV
 const getFileFromCLI = () => {
-    const {
-        values,
-    } = parseArgs({
-        options: {
-            file: {
-                type: 'string',
-                short: 'f',
+    try {
+        const {
+            values: {
+                file
             },
-        }
-    });
-    return values.file;
+        } = parseArgs({
+            options: {
+                file: {
+                    type: 'string',
+                    short: 'f',
+                },
+            }
+        });
+        // case -f or --file is not provided
+        if(!file) throw new Error()
+
+        return file;
+    }
+    catch (error) {
+        console.error(chalk.red('Error: Please provide a file path as an argument.'));
+        process.exit(1);
+    }
 }
 
 const filePath = !isQuokkaEnv ? getFileFromCLI() : './error.js'
-
-if (!filePath) {
-    console.error(chalk.red('Error: Please provide a file path as an argument.'));
-    process.exit(1);
-}
 
 const eslintClone = new ESLintClone(filePath);
 eslintClone.lint();
