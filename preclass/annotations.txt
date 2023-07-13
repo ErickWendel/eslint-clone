@@ -6,3 +6,10 @@ npm unlink -g eslint-clone
 https://astexplorer.net/
 
 npm pkg set engines.node=$(node -v) author=erickwendel
+
+task:
+    keep line breaks
+    keep comments
+    keep spaces
+    don't put semicolon automatically
+    report semicolon ';'

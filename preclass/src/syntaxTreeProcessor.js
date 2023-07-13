@@ -57,9 +57,7 @@ class SyntaxTreeProcessor {
     const { expression } = node;
 
     // console.log
-    if (!expression.left) return;
-
-    if (!expression.left.type === 'Identifier') {
+    if (expression.left?.type !== 'Identifier') {
       return;
     }
 
@@ -74,6 +72,9 @@ class SyntaxTreeProcessor {
       expression.left.type === 'MemberExpression' &&
       variable.stage === this.#stages.declaration
     ) {
+      // if already const, keep it
+      if (originalKind === this.#variableTypes.const) return;
+
       this.#storeError(
         this.#messages.useConst(originalKind),
         nodeDeclaration.loc.start
@@ -111,32 +112,30 @@ class SyntaxTreeProcessor {
       nodeDeclaration,
     });
     return
-
-
   }
 
-  process(node) {
-    const traverse = (node) => {
-      const hooks = {
-        Literal: (node) => this.#handleLiteral(node),
-        VariableDeclaration: (node) => this.#handleVariableDeclaration(node),
-        ExpressionStatement: (node) => this.#handleExpressionDeclaration(node),
-      };
-      hooks[node?.type]?.(node);
-
-      for (const key in node) {
-        if (typeof node[key] !== 'object') continue;
-        traverse(node[key]);
-      }
+  #traverse(node) {
+    const hooks = {
+      Literal: (node) => this.#handleLiteral(node),
+      VariableDeclaration: (node) => this.#handleVariableDeclaration(node),
+      ExpressionStatement: (node) => this.#handleExpressionDeclaration(node),
     };
+    hooks[node?.type]?.(node);
 
-    traverse(node)
+    for (const key in node) {
+      if (typeof node[key] !== 'object') continue;
+      this.#traverse(node[key]);
+    }
+  };
+  process(node) {
 
-    this.checkDeclarationsThatNeverChanged();
+    this.#traverse(node);
+    this.#checkDeclarationsThatNeverChanged();
+
     return [...this.#errors.values()];
   }
 
-  checkDeclarationsThatNeverChanged() {
+  #checkDeclarationsThatNeverChanged() {
     [...this.#variables.values()]
       .filter(
         ({ stage, nodeDeclaration }) =>
