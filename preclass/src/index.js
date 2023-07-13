@@ -9,8 +9,7 @@ import chalk from 'chalk';
 import * as acorn from 'acorn';
 
 // Check if the file path provided is in the current directory
-const isQuokkaEnv = !!process.env.WALLABY_ENV;
-function getFileFromCLI() {
+function getFilePathFromCLI() {
   try {
     const { values: { file } } = parseArgs({
       options: {
@@ -29,7 +28,7 @@ function getFileFromCLI() {
   }
 };
 
-const filePath = !isQuokkaEnv ? getFileFromCLI() : './error.js';
+const filePath = getFilePathFromCLI()
 const outputFilePath = path.join(process.cwd(), `${path.basename(filePath, '.js')}.linted.js`);
 
 
