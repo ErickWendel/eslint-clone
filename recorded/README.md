@@ -61,3 +61,12 @@ Code fixed and saved successfully.
 ```shell
 npm unlink eslint-clone
 ```
+
+## Tasks
+- fix the replace by raw string by change the AST Node correctly
+- keep line breaks
+- keep comments
+- keep spaces
+- don't put semicolons automatically
+- report missing semicolon ';'
+---
