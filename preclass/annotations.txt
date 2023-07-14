@@ -24,7 +24,7 @@ touch error.js
 mkdir src
     index.js
 
-npm i acorn@8.10.0
+npm i espree@9.6.1
 index.js
     untill ast
     console.log(ast) > save on a file

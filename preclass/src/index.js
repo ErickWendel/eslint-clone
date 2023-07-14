@@ -6,7 +6,7 @@ import { parseArgs } from 'node:util';
 import Reporter from './reporter.js';
 import SyntaxTreeProcessor from './syntaxTreeProcessor.js';
 import chalk from 'chalk';
-import * as acorn from 'acorn';
+import * as espree from 'espree';
 
 function getFilePathFromCLI() {
   try {
@@ -32,11 +32,10 @@ const outputFilePath = path.join(process.cwd(), `${path.basename(filePath, '.js'
 
 
 const code = fs.readFileSync(filePath, 'utf-8');
-const ast = acorn.parse(code, {
+const ast = espree.parse(code, {
     ecmaVersion: 2022,
-    locations: true,
+    loc: true,
     sourceType: 'module',
-    allowHashBang: true,
 });
 const syntaxTreeProcessor = new SyntaxTreeProcessor(filePath);
 const errors = syntaxTreeProcessor.process(ast);
