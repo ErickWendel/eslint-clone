@@ -17,23 +17,23 @@ eslint-clone --file error.js
 
 Outputs
 ```shell
-Error: use "const" instead of var
+Error: use "const" instead of "var"
 error.js:1:1
 Error: use single quotes instead of double quotes
 error.js:1:12
 Error: use single quotes instead of double quotes
 error.js:1:23
-Error: use "const" instead of var
+Error: use "const" instead of "var"
 error.js:2:1
 Error: use single quotes instead of double quotes
 error.js:3:24
-Error: use "let" instead of var
+Error: use "let" instead of "var"
 error.js:5:1
 Error: use single quotes instead of double quotes
 error.js:6:25
 Error: use single quotes instead of double quotes
 error.js:9:25
-Error: use "const" instead of let
+Error: use "const" instead of "let"
 error.js:15:1
 Error: use single quotes instead of double quotes
 error.js:15:25
