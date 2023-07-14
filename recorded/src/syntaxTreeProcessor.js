@@ -4,8 +4,8 @@ export default class SyntaxTreeProcessor {
     #variables = new Map()
     #messages = {
         singleQuote: () => 'use single quotes instead of double quotes',
-        useConst: (variableKind) => `use "const" instead of ${variableKind}`,
-        useLet: (variableKind) => `use "let" instead of ${variableKind}`,
+        useConst: (variableKind) => `use "const" instead of "${variableKind}"`,
+        useLet: (variableKind) => `use "let" instead of "${variableKind}"`,
     }
     #stages = {
         declaration: 'declaration',
