@@ -1,0 +1,25 @@
+{
+  "name": "eslint-clone",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "bin": {
+    "eslint-clone": "src/index.js"
+  },
+  "scripts": {
+    "lint": "eslint-clone --file error.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "erickwendel",
+  "license": "ISC",
+  "type": "module",
+  "engines": {
+    "node": "v18.16.1"
+  },
+  "dependencies": {
+    "astring": "^1.8.6",
+    "chalk": "^5.3.0",
+    "espree": "^9.6.1"
+  }
+}
