@@ -57,13 +57,11 @@ class SyntaxTreeProcessor {
     const { expression } = node;
 
     // console.log
-    if (expression.left?.type !== 'Identifier') {
-      return;
-    }
+    if(!expression.left) return;
 
     const varName = (expression.left.object || expression.left).name;
+    console.log('varName', varName)
     if (!this.#variables.has(varName)) return;
-
     const variable = this.#variables.get(varName);
     const { nodeDeclaration, originalKind } = variable
 
