@@ -1,7 +1,17 @@
 # ESLint Reimagined: Creating a Linter from Scratch
 
+Welcome, this repo is part of my [**youtube video**](https://bit.ly/eslint-clone-ew) about **Creating your own ESLint from scratch (en-us)**
 
+First of all, leave your star 🌟 on this repo.
+
+Access our [**exclusive telegram channel**](https://t.me/ErickWendelContentHub) so I'll let you know about all the content I've been producing 
+
+## Complete source code
+- Access it in [app](./recorded/)
+
+  
 ![ESLint Reimagined-thumb](https://github.com/ErickWendel/eslint-clone/assets/8060102/086f9a26-a056-45d2-be36-07a8b73c96b0)
+
 
 ## Usage
 ```shell
