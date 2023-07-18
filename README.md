@@ -14,6 +14,9 @@ Access our [**exclusive telegram channel**](https://t.me/ErickWendelContentHub) 
 
 
 ## Usage
+
+Go to [app](./recorded/) and restore dependencies as follows:
+
 ```shell
 nvm use
 npm i
