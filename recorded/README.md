@@ -51,7 +51,32 @@ npm unlink eslint-clone
 ```
 
 ## Tasks
-- fix the replace by raw string by changing the AST Node correctly
+- fix the bug when replacing quotes
+    - if a code have single quotes enclosing double quotes such as:
+
+         ```js
+        const name = '"ana"'
+        ```
+
+        it'd be transformed as below and will cause a syntax error.
+
+        ```js
+        const name = ''ana''
+        ```
+
+    - **How to fix:** replace it to a template string instead.
+        - Input:
+            ```js
+            '"double"'.replaceAll('"', "'");
+            ```
+        - Current Output:
+            ```js
+            ''double''.replaceAll(''', ''');
+            ```
+        - Expected Output:
+            ```js
+            `"double"`.replaceAll(`"`, `'`);
+            ```
 - keep line breaks
 - keep comments
 - keep spaces
