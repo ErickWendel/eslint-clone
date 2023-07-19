@@ -9,8 +9,7 @@ Access our [**exclusive telegram channel**](https://t.me/ErickWendelContentHub) 
 ## Complete source code
 - Access it in [app](./recorded/)
 
-  
-![ESLint Reimagined-thumb](https://github.com/ErickWendel/eslint-clone/assets/8060102/086f9a26-a056-45d2-be36-07a8b73c96b0)
+![ESLint Reimagined-thumb](https://github.com/ErickWendel/eslint-clone/assets/8060102/0892dbfa-3438-49bf-af4f-205b3e9ccbac)
 
 
 ## Usage
